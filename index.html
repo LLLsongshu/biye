@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>毕业模拟器</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+  background: #0a0e14; color: #c9d1d9;
+  min-height: 100vh; display: flex; justify-content: center; align-items: center;
+}
+#app { width: 100%; max-width: 880px; min-height: 100vh; padding: 20px; }
+.screen { display: none; }
+.screen.active { display: block; }
+
+#title-screen { text-align: center; padding-top: 60px; }
+#title-screen h1 { font-size: 2.6em; background: linear-gradient(135deg, #58a6ff, #3fb950, #d2a8ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+#title-screen .sub { font-size: 1em; color: #8b949e; margin: 30px 0; }
+#title-screen .warn { font-size: 0.8em; color: #484f58; margin-bottom: 30px; font-style: italic; }
+
+.btn { display: inline-block; padding: 11px 28px; font-size: 0.92em; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; transition: all 0.2s; font-family: inherit; color: #fff; }
+.btn:hover { transform: translateY(-2px); }
+.bp { background: linear-gradient(135deg, #238636, #2ea043); box-shadow: 0 4px 14px rgba(35,134,54,0.4); }
+.bs { background: linear-gradient(135deg, #30363d, #484f58); }
+.bw { background: linear-gradient(135deg, #9a6700, #d29922); }
+.bd { background: linear-gradient(135deg, #da3633, #f85149); }
+.bsm { padding: 6px 14px; font-size: 0.8em; }
+
+#game-screen.active { display: block; }
+.gh { display: flex; justify-content: space-between; align-items: center; padding: 12px 18px; background: #161b22; border: 1px solid #30363d; border-radius: 10px; margin-bottom: 14px; }
+.gday { font-size: 1.1em; font-weight: bold; color: #58a6ff; }
+.gwk { color: #8b949e; font-size: 0.78em; }
+.gtag { font-size: 0.78em; color: #d2a8ff; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 680px) { .grid { grid-template-columns: 1fr; } }
+
+.panel { background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 14px; }
+.panel h3 { color: #58a6ff; margin-bottom: 8px; font-size: 0.9em; border-bottom: 1px solid #21262d; padding-bottom: 6px; }
+.srow { display: flex; justify-content: space-between; align-items: center; margin-bottom: 7px; }
+.slabel { color: #8b949e; font-size: 0.8em; }
+.sbar { flex: 1; height: 7px; background: #21262d; border-radius: 3px; margin: 0 8px; overflow: hidden; }
+.sfill { height: 100%; border-radius: 3px; transition: width 0.8s ease; }
+.sr { background: linear-gradient(90deg, #58a6ff, #79c0ff); }
+.sp { background: linear-gradient(90deg, #d2a8ff, #e2c8ff); }
+.se { background: linear-gradient(90deg, #3fb950, #56d364); }
+.sm { background: linear-gradient(90deg, #f0883e, #f0a060); }
+.sb { background: linear-gradient(90deg, #f85149, #ff6b6b); }
+.sv { color: #c9d1d9; font-size: 0.75em; width: 24px; text-align: right; }
+
+#elog { grid-column: 1 / -1; background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 14px; max-height: 400px; overflow-y: auto; }
+#elog h3 { color: #58a6ff; margin-bottom: 8px; font-size: 0.9em; border-bottom: 1px solid #21262d; padding-bottom: 6px; }
+.ee { padding: 6px 10px; margin-bottom: 4px; border-radius: 5px; font-size: 0.82em; line-height: 1.55; animation: si 0.3s ease; border-left: 3px solid #30363d; }
+@keyframes si { from { opacity: 0; transform: translateX(-6px); } to { opacity: 1; transform: translateX(0); } }
+.et { border-left-color: #58a6ff; background: #0d1117; color: #58a6ff; font-weight: bold; }
+.en { border-left-color: #30363d; }
+.ed { border-left-color: #d29922; background: #1a1410; }
+.eg { border-left-color: #3fb950; background: #101a14; }
+.eb { border-left-color: #f85149; background: #1a1014; }
+.es { border-left-color: #58a6ff; background: #0d1520; }
+.eo { border-left-color: #8b5e3c; background: #1a1210; color: #c9a050; }
+.ec { border-left-color: #d2a8ff; background: #14101a; }
+#carea { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+
+#ending-screen { text-align: center; padding-top: 35px; }
+#ending-screen h1 { font-size: 1.9em; margin-bottom: 10px; }
+.etext { color: #8b949e; line-height: 1.85; max-width: 600px; margin: 12px auto; font-size: 0.88em; }
+.gb { background: linear-gradient(135deg, #1a2a1a, #0d1117); border: 2px solid #3fb950; border-radius: 10px; padding: 18px; margin: 16px 0; }
+.gb h2 { color: #3fb950; font-size: 1.3em; }
+.glist { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 12px; }
+.gi { background: #0d1117; border: 1px solid #21262d; border-radius: 8px; padding: 10px 14px; text-align: center; min-width: 90px; }
+.gi .gn { font-weight: bold; font-size: 0.88em; }
+.gi .gr { font-size: 0.73em; color: #3fb950; margin-top: 3px; }
+.gi .go { font-size: 0.66em; color: #8b949e; margin-top: 2px; }
+.egood h1 { color: #3fb950; } .eok h1 { color: #d29922; } .ebad h1 { color: #f85149; }
+::-webkit-scrollbar { width: 5px; } ::-webkit-scrollbar-track { background: #0d1117; } ::-webkit-scrollbar-thumb { background: #30363d; border-radius: 3px; }
+</style>
+</head>
+<body>
+<div id="app">
+
+<div id="title-screen" class="screen active">
+  <h1>🎓 毕业模拟器</h1>
+  <p class="sub">—— 距离毕业还有30天 ——</p>
+  <p class="warn">⚠️ 本故事纯属虚构。</p>
+  <button class="btn bp" onclick="window.startGame()">开始</button>
+</div>
+
+<div id="game-screen" class="screen">
+  <div class="gh">
+    <div><span class="gday">📅 第 <span id="dn">1</span> 天</span><br><span class="gwk" id="tl">周一</span></div>
+    <div class="gtag" id="st"></div>
+    <div style="text-align:right;font-size:0.8em;color:#8b949e;">研三 · 最后一个学期</div>
+  </div>
+  <div class="grid">
+    <div class="panel"><h3>📊 状态</h3><div id="sc"></div></div>
+    <div class="panel"><h3>👥 今日</h3><div id="cc"></div></div>
+    <div class="panel" id="elog"><h3>📜 日志</h3><div id="ec2"></div></div>
+    <div id="carea"></div>
+  </div>
+</div>
+
+<div id="ending-screen" class="screen"><div id="endc"></div></div>
+
+</div>
+
+<script>
+(function() {
+'use strict';
+
+var G = { day: 0, scene: 0, player: { paper: 35, health: 65, mental: 60 }, flags: {}, done: false, _ch: [] };
+
+function rs() {
+  var p = G.player, h = '';
+  [{ l: '论文进度', k: 'paper', c: 'sp' },{ l: '身体状况', k: 'health', c: 'sb' },{ l: '精神状态', k: 'mental', c: 'sm' }].forEach(function(s) {
+    h += '<div class="srow"><span class="slabel">' + s.l + '</span><div class="sbar"><div class="sfill ' + s.c + '" style="width:' + p[s.k] + '%"></div></div><span class="sv">' + p[s.k] + '</span></div>';
+  });
+  document.getElementById('sc').innerHTML = h;
+}
+
+function rc() {
+  var d = getS();
+  var list = [
+    { n: 'D师姐', a: '👩‍🔬', t: '博三', s: d.dr || '' },{ n: 'E师姐', a: '👩‍💻', t: '博三', s: d.er || '' },
+    { n: 'F师兄', a: '🧑‍🔬', t: '博二', s: d.fr || '' },{ n: 'G师兄', a: '🧑‍💻', t: '博二', s: d.gr || '' },
+    { n: 'X/Y/Z', a: '🙂', t: '研三·同级', s: d.xy || '' },{ n: '刘装装', a: '🤖', t: '研三·同级', s: d.lz || '' },
+    { n: '刘不来', a: '🛌', t: '研三·同级', s: d.lb || '' }
+  ];
+  var h = '';
+  list.forEach(function(c) {
+    h += '<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;font-size:0.8em;"><span>' + c.a + '</span><span style="font-weight:bold;">' + c.n + '</span><span style="color:#8b949e;font-size:0.72em;">' + c.t + '</span></div><div style="font-size:0.72em;color:#58a6ff;margin-bottom:6px;margin-left:22px;">' + c.s + '</div>';
+  });
+  document.getElementById('cc').innerHTML = h;
+}
+
+function ae(t, c) { c = c || 'en'; var el = document.getElementById('ec2'); var dv = document.createElement('div'); dv.className = 'ee ' + c; dv.textContent = t; el.appendChild(dv); el.scrollTop = el.scrollHeight; }
+function am(t) { ae(t, 'et'); }
+function sc(a) { G._ch = a; var h = ''; a.forEach(function(c, i) { h += '<button class="btn ' + (c.cls || 'bs') + ' bsm" onclick="window._pk(' + i + ')">' + c.label + '</button>'; }); document.getElementById('carea').innerHTML = h; }
+function cc() { document.getElementById('carea').innerHTML = ''; }
+function uh() { var d = getS(); document.getElementById('dn').textContent = d.day; document.getElementById('tl').textContent = d.wk; document.getElementById('st').textContent = d.tag; }
+function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+function mp(k, d) { G.player[k] = clamp(G.player[k] + d, 0, 100); }
+
+function getS() {
+  var S = {
+
+    0: { day: 1, wk: '周一 · 距毕业30天', tag: '📌 普通的一天', dr: '在细胞房忙', er: '在看文献', fr: '在配试剂', gr: '在写代码', xy: '在工位上各忙各的', lz: '9:40才来，一股酸馊味', lb: '工位空着',
+      run: function() {
+        am('8:30');
+        ae('你跟D师姐前后脚到实验室。刷卡、开灯、开超净台——这就是研三的日常。', 'en');
+        ae('X、Y、Z也陆续到了。大家心照不宣：毕业倒计时三十天，论文还没写完。', 'en');
+        am('9:40');
+        ae('一股酸馊味飘过来——刘装装到了。他在工位上坐下，屏幕上弹出好几个AI对话框。', 'eo');
+        ae('他的实验台上干净得像没人用过。', 'ed');
+        am('10:00');
+        ae('刘不来的工位还是空的。你已经习惯了。', 'en');
+        sc([{ label: '🍳 EMSA（跑一天）', cls: 'bp', act: 'e1' },{ label: '🧬 qPCR六板（跑一天）', cls: 'bp', act: 'e2' },{ label: '🌿 烟草注射（一天）', cls: 'bp', act: 'e3' },{ label: '🔬 显微镜（拍一天）', cls: 'bp', act: 'e4' },{ label: '🌾 下地采样（一天）', cls: 'bp', act: 'e5' },{ label: '🧪 WB（跑一天）', cls: 'bp', act: 'e6' }]);
+      },
+      handle: function(a) {
+        var t = { e1: 'EMSA跑完，shift band出来了。论文又充实了一页。', e2: '六板qPCR跑完，移液移得手酸。但Ct值很漂亮。', e3: '烟草注射完毕。三天后看荧光。', e4: '显微镜拍了一天，找到了好几个好视野。', e5: '下地采样，晒脱一层皮。样本质量不错。', e6: 'WB从制胶到曝光跑完。条带清晰，值得。' };
+        mp('paper', 6); mp('health', -3); mp('mental', -2);
+        ae(t[a] || '实验进展顺利。', 'eg');
+        goS(1);
+      }
+    },
+
+    1: { day: 3, wk: '周三', tag: '📌 老板的指派', dr: '在整理组会PPT', er: '被老板叫去谈话', fr: '在做实验', gr: '在跑数据', xy: '各忙各的', lz: '在问AI', lb: '——',
+      run: function() {
+        am('9:00');
+        ae('E师姐被老板叫进办公室。出来时表情微妙。', 'ed');
+        ae('D师姐小声说："老板让E师姐带刘不来做实验。这已经是第三个被指定的人了。"', 'es');
+        ae('E师姐给刘不来发了微信。过了一个多小时："好的师姐，我这两天就过来。"', 'en');
+        ae('E师姐把手机屏幕亮给你看——聊天记录往上翻，几乎全是"好的师姐"和"这两天就过来"。', 'ed');
+        G.lbchain = (G.lbchain || 0) + 1;
+        sc([{ label: '🧪 继续补实验数据', cls: 'bp', act: 'exp' },{ label: '📝 写论文Introduction和Discussion', cls: 'bp', act: 'write' },{ label: '📊 整理图表，排版参考文献', cls: 'bs', act: 'fig' },{ label: '😴 今天效率不高，早点回去休息', cls: 'bs', act: 'rest' }]);
+      },
+      handle: function(a) {
+        if (a === 'exp') { mp('paper', 5); mp('health', -3); ae('补了一批实验数据。论文的实验部分越来越完整了。', 'eg'); }
+        else if (a === 'write') { mp('paper', 8); mp('mental', -4); ae('写到深夜，Introduction终于理顺了逻辑。咖啡喝了三杯。', 'eg'); }
+        else if (a === 'fig') { mp('paper', 5); ae('图表排版是个细致活。做完之后论文看起来像样多了。', 'eg'); }
+        else { mp('health', 8); mp('mental', 6); ae('难得早睡。身体是毕业的本钱。', 'eg'); }
+        goS(2);
+      }
+    },
+
+    2: { day: 5, wk: '周五', tag: '📌 组会前夕', dr: '在准备明天的汇报', er: '在核对数据', fr: '在整理结果', gr: '在跑最后的分析', xy: '都在赶PPT', lz: '今天居然没走——明天组会，他要通宵', lb: '——',
+      run: function() {
+        am('17:00');
+        ae('明天是周六组会。大家都陆陆续续走了，但刘装装还在工位上。', 'en');
+        ae('你看到他拿出一罐红牛和一包速溶咖啡。这是他的"组会准备"——通宵。', 'ed');
+        ae('D师姐路过时叹了口气。谁都知道他通宵是为了明天表演给老板看。', 'es');
+        sc([{ label: '🌙 也留下来加班赶论文', cls: 'bd', act: 'night' },{ label: '🏠 回家休息，明天组会精神好点', cls: 'bp', act: 'home' },{ label: '💬 跟X和Y去食堂吃个饭再回来', cls: 'bs', act: 'dinner' },{ label: '📝 把组会PPT再打磨一下', cls: 'bs', act: 'ppt' }]);
+      },
+      handle: function(a) {
+        if (a === 'night') { mp('paper', 6); mp('health', -6); mp('mental', -5); ae('你熬到凌晨两点。论文又推进了一截，但眼睛干涩得厉害。旁边的刘装装还在对着AI对话框敲键盘。', 'eg'); }
+        else if (a === 'home') { mp('health', 5); mp('mental', 4); ae('你早早回去睡了。明天组会，状态最重要。', 'eg'); }
+        else if (a === 'dinner') { mp('mental', 4); mp('health', 2); ae('食堂里X吐槽说他的论文Discussion还差两千字。Y说他的图还没做完。大家相视苦笑。', 'en'); }
+        else { mp('paper', 3); ae('你把PPT从头到尾理了一遍。','eg'); }
+        goS(3);
+      }
+    },
+
+    3: { day: 6, wk: '周六 · 组会日', tag: '📌 卫生问题', dr: 'PPT一如既往地扎实', er: '数据展示清晰', fr: '汇报行为学结果', gr: '生信分析汇报', xy: '轮流汇报', lz: '没来组会', lb: '—— 没来',
+      run: function() {
+        am('9:00 — 组会');
+        ae('📢 组会。D师姐汇报了最新的WB和Co-IP，数据扎实。E师姐、F师兄、G师兄和X、Y、Z各有进展。', 'es');
+        am('自由讨论');
+        ae('H老师清了清嗓子："我说一个事。实验室卫生——包括个别同学的个人卫生——大家注意一下。我们实验室通风条件有限，请互相尊重。"', 'ed');
+        ae('她说这话的时候，刘装装的位子空着——他没来组会。', 'ed');
+        ae('会议室里安静了两秒。每个人都心知肚明H老师在说什么，但本人不在场，这场景显得格外荒唐。', 'ed');
+        ae('会后H老师把《实验室卫生管理条例》发到了课题组的微信大群里。', 'ed');
+        ae('刘不来的位子一如既往地空着。老板依然没有问。', 'eb');
+        G.flags.hyg = true;
+        sc([{ label: '🌬️ 默默起身开窗通风', cls: 'bs', act: 'win' },{ label: '😤 在群里回"收到"并@刘装装', cls: 'bw', act: 'at' },{ label: '🤐 不动声色，看刘装装什么时候回复', cls: 'bs', act: 'wait' },{ label: '😶 继续写自己的论文——毕业要紧', cls: 'bp', act: 'focus' }]);
+      },
+      handle: function(a) {
+        if (a === 'win') { mp('health', 2); ae('你把实验室的窗户全部打开。十一月的冷风灌进来，但至少能呼吸。', 'en'); }
+        else if (a === 'at') { mp('mental', -2); ae('你@了刘装装。过了一个小时他回复："收到了。"然后什么也没变。', 'ed'); }
+        else if (a === 'wait') { ae('你等了一整天。刘装装在群里始终没有回复。', 'en'); }
+        else { mp('paper', 3); ae('你戴上耳机继续改论文。', 'eg'); }
+        goS(4);
+      }
+    },
+
+    4: { day: 9, wk: '周二', tag: '📌 忍无可忍', dr: '突然起身离开了工位', er: '默默戴上了口罩', fr: '去动物房了', gr: '戴着降噪耳机', xy: '有人在用风扇对着自己吹', lz: '在工位上，酸馊味浓烈', lb: '——',
+      run: function() {
+        am('11:30');
+        ae('距离H老师发管理条例已经过去好几天。什么也没有改变。', 'ed');
+        ae('刘装装工位附近的酸馊味一如既往。你发现自己看文献时下意识用衣领捂着鼻子。', 'eo');
+        ae('D师姐先站起来了。她拿起笔记本，一言不发地走出了实验室。经过你身边时低声说了三个字："休息室。"', 'es');
+        mp('health', -4); mp('mental', -3);
+        sc([{ label: '😮‍💨 跟D师姐去休息室避难', cls: 'bp', act: 'follow' },{ label: '😤 强忍留下，开窗+风扇开到最大', cls: 'bd', act: 'stay' },{ label: '🏃 去动物房帮F师兄', cls: 'bs', act: 'animal' },{ label: '☕ 去楼下咖啡厅写论文', cls: 'bs', act: 'cafe' }]);
+      },
+      handle: function(a) {
+        if (a === 'follow') { mp('mental', 5); mp('paper', 2); ae('D师姐在休息室里边写论文边说："课题组待久了，你会发现什么样的人都有。但你得毕业——别让别人的问题影响你。"', 'es'); }
+        else if (a === 'stay') { mp('health', -3); ae('你留下来了。E师姐默默递来一瓶风油精。你擦在人中上，勉强撑过了一下午。', 'en'); }
+        else if (a === 'animal') { mp('health', 3); ae('动物房里至少是动物的正常味道。F师兄感慨："还是老鼠单纯。"', 'en'); }
+        else { mp('mental', 5); mp('paper', 5); ae('咖啡厅里空气清新，你效率极高地改完了一章。', 'eg'); }
+        G.flags.driven = true;
+        goS(5);
+      }
+    },
+
+    5: { day: 11, wk: '周四', tag: '📌 赶论文', dr: '在改自己论文的图', er: '在写讨论部分', fr: '在整理动物实验记录', gr: '在调代码参数', xy: '都在埋头赶论文', lz: '在AI对话框和PPT之间来回切', lb: '——',
+      run: function() {
+        am('10:00');
+        ae('论文的每一个章节都在推进，但每天熬夜让身体开始报警——黑眼圈、肩颈酸痛、偶尔心悸。', 'en');
+        ae('X说他昨晚写到凌晨三点。Y说她连续四天没洗头了。你们互相看了一眼，默契地点了点头。', 'en');
+        ae('刘装装的屏幕上，AI对话框和PPT交替闪烁。他正在用AI生成Discussion——你不小心瞥到的。', 'ed');
+        sc([{ label: '🧪 补一个关键实验', cls: 'bp', act: 'e1' },{ label: '📝 通宵改论文（进度++，身体--）', cls: 'bd', act: 'night' },{ label: '🍜 跟XYZ去食堂吃顿好的调整一下', cls: 'bs', act: 'eat' },{ label: '💤 今天早点回去睡觉', cls: 'bp', act: 'sleep' }]);
+      },
+      handle: function(a) {
+        if (a === 'e1') { mp('paper', 7); mp('health', -3); mp('mental', -2); ae('补完实验，数据部分更完整了。', 'eg'); }
+        else if (a === 'night') { mp('paper', 10); mp('health', -7); mp('mental', -5); ae('通宵之后论文推进了一大截。但早晨对着镜子，你差点没认出自己。', 'eg'); }
+        else if (a === 'eat') { mp('mental', 5); mp('health', 2); ae('食堂里大家聊起来。Z说了一句金句："我们这是在用自己的肝换一张纸。"', 'en'); }
+        else { mp('health', 8); mp('mental', 6); ae('你睡了八个小时。醒来觉得世界都清晰了一点。', 'eg'); }
+        goS(6);
+      }
+    },
+
+    6: { day: 13, wk: '周六 · 组会日', tag: '📌 刘装装的表演', dr: '汇报免疫荧光结果', er: '展示qPCR数据', fr: '汇报行为学', gr: '蛋白组分析', xy: '轮流汇报', lz: '一上台就精神了，播音腔全开', lb: '—— 没来',
+      run: function() {
+        am('9:00 — 组会');
+        ae('📢 组会。D师姐和E师姐的汇报让老板频频点头。', 'es');
+        am('刘装装汇报');
+        ae('刘装装今天来了。他站起来，嗓音洪亮如播音员，在幕布前手舞足蹈。', 'ed');
+        ae('"我们这个分析，系统全面地揭示了——"激光笔在热图和火山图之间翻飞。', 'ed');
+        ae('PPT上全是生信预测图。湿实验数据只有可怜的两张——误差棒高得离谱，有些跨过了对照组数倍。', 'ed');
+        ae('但老板似乎被他带跑了节奏，点着头说："图挺漂亮。"', 'ed');
+        ae('你旁边的X在笔记本上画了一个巨大的误差棒，推给你看。你差点没忍住笑。', 'en');
+        G.flags.lzshow = true;
+        sc([{ label: '🧬 跑qPCR收尾', cls: 'bp', act: 'e1' },{ label: '🧪 WB最后一批样品', cls: 'bp', act: 'e2' },{ label: '🔬 拍完最后的显微镜图', cls: 'bp', act: 'e3' },{ label: '📝 集中精力写论文', cls: 'bp', act: 'e4' }]);
+      },
+      handle: function(a) {
+        mp('paper', 8); mp('health', -3); mp('mental', -2);
+        ae('实验又推进了一步。论文越来越像样了。', 'eg');
+        goS(7);
+      }
+    },
+
+    7: { day: 15, wk: '周一', tag: '📌 接力棒', dr: '和老板讨论课题', er: '总算能专心做自己的了', fr: '被老板叫去办公室', gr: '在跑数据', xy: '各自赶论文', lz: '在问AI', lb: '——',
+      run: function() {
+        am('9:30');
+        ae('E师姐跟老板说实在没法继续带刘不来。老板把F师兄叫进办公室。', 'ed');
+        ae('F师兄出来后苦笑："接力棒传到我这里了。E师姐→我。"他给刘不来发了消息。', 'en');
+        ae('刘不来回复："好的师兄。我这两天就去。"', 'en');
+        ae('D师姐在旁边轻声说："这台词我听过很多遍了。"', 'es');
+        G.lbchain = (G.lbchain || 0) + 1;
+        sc([{ label: '📝 通宵改完论文初稿', cls: 'bd', act: 'night' },{ label: '🧪 补最后一个实验', cls: 'bp', act: 'exp' },{ label: '💬 跟D师姐聊聊毕业的事', cls: 'bs', act: 'chat' },{ label: '💤 太累了，今天休息', cls: 'bs', act: 'rest' }]);
+      },
+      handle: function(a) {
+        if (a === 'night') { mp('paper', 12); mp('health', -8); mp('mental', -6); ae('凌晨四点，初稿终于完成。你觉得身体被掏空了，但屏幕上那个完整的文档让你想哭。', 'eg'); }
+        else if (a === 'exp') { mp('paper', 6); mp('health', -3); ae('最后一个实验收尾。数据全部到手。', 'eg'); }
+        else if (a === 'chat') { mp('mental', 5); ae('D师姐说："记住一点——你论文里的每一个数据都经得起推敲。这就够了。"', 'es'); }
+        else { mp('health', 8); mp('mental', 6); ae('休息是必要的投资。', 'eg'); }
+        goS(8);
+      }
+    },
+
+    8: { day: 18, wk: '周四', tag: '📌 日常赶工', dr: '在改论文格式', er: '在准备投稿', fr: '在整理数据', gr: '在写代码文档', xy: '论文初稿都差不多了', lz: '还在问AI写Discussion', lb: '——',
+      run: function() {
+        am('10:00');
+        ae('论文初稿完成。现在是改格式、调图表、查漏补缺的阶段。', 'en');
+        ae('X说他的参考文献格式调了一整天。Y说她发现有一张图的error bar算错了，要重做。', 'en');
+        ae('你的身体在抗议这段时间的透支——偶尔心悸，肩膀硬得像石头。', 'eb');
+        sc([{ label: '📝 逐字逐句修改论文', cls: 'bp', act: 'edit' },{ label: '🏃 去操场跑几圈清醒一下', cls: 'bp', act: 'run' },{ label: '🍺 跟XYZ去小聚一下喘口气', cls: 'bs', act: 'drink' },{ label: '💤 补觉——身体在报警了', cls: 'bs', act: 'sleep' }]);
+      },
+      handle: function(a) {
+        if (a === 'edit') { mp('paper', 5); mp('mental', -2); ae('改完一遍，论文看着清爽了不少。', 'eg'); }
+        else if (a === 'run') { mp('health', 6); mp('mental', 5); ae('跑了五公里。心脏砰砰跳——但这次是正常的跳，不是心悸。', 'eg'); }
+        else if (a === 'drink') { mp('mental', 6); mp('health', -1); ae('X说："我们居然快毕业了。"Y说："我到现在都不敢相信。"你举杯："敬我们。"', 'en'); }
+        else { mp('health', 8); mp('mental', 5); ae('补了一觉。醒来觉得血压都降了。', 'eg'); }
+        goS(9);
+      }
+    },
+
+    9: { day: 20, wk: '周六 · 组会日', tag: '📌 老板开始怀疑', dr: '汇报了Co-IP和WB', er: '展示通路验证', fr: '汇报行为学统计', gr: '蛋白组数据', xy: '论文基本成型', lz: '数据毫无改善，但依然神采飞扬', lb: '—— F师兄说"这周她真的会来"',
+      run: function() {
+        am('9:00 — 组会');
+        ae('📢 组会。你的论文数据扎实，汇报时老板连连点头。', 'eg');
+        am('刘装装汇报');
+        ae('刘装装又用播音腔开场，手舞足蹈。但热图和火山图跟上次几乎一模一样。', 'ed');
+        ae('老板这次没有点头。"装装，这个误差棒我上次就提过。为什么还是这样？"', 'ed');
+        ae('刘装装顿了一下（不到一秒）迅速接上："重新跑了老师！生物学重复的差异确实大——但p值是显著的！"', 'ed');
+        ae('老板沉默了一会："你把原始数据和代码全部发我。现在。"', 'ed');
+        ae('刘装装额头开始冒汗。', 'ed');
+        sc([{ label: '📝 论文收尾——最后一遍通读', cls: 'bp', act: 'final' },{ label: '📊 把图表全部高清重做', cls: 'bs', act: 'fig' },{ label: '✍️ 写致谢——终于能写这页了', cls: 'bs', act: 'ack' }]);
+      },
+      handle: function(a) {
+        mp('paper', 6);
+        if (a === 'final') { ae('通读完毕。你觉得这是你二十多年来写得最好的东西。', 'eg'); }
+        else if (a === 'fig') { ae('高清图全部替换完毕。论文看着专业多了。', 'eg'); }
+        else { mp('mental', 4); ae('写到致谢的时候鼻子有点酸。你谢了D师姐、E师姐、X、Y、Z——还有那个每天给你递风油精的E师姐。', 'eg'); }
+        goS(10);
+      }
+    },
+
+    10: { day: 22, wk: '周一', tag: '📌 第三棒 · 扣钱 · 改图', dr: '在写自己的论文', er: '在准备投稿', fr: '把刘不来交出去了', gr: '被老板叫去', xy: '论文都差不多了', lz: '异常安静。Y老师正在帮他重做图', lb: '—— 被扣钱了',
+      run: function() {
+        am('10:00');
+        ae('F师兄也撑不住了。老板又把G师兄叫进办公室。G师兄出来时表情跟前面两位完全一样。', 'ed');
+        ae('G师兄发了消息。两小时后刘不来回复："好的师兄。"', 'en');
+        G.lbchain = (G.lbchain || 0) + 1;
+        am('15:00');
+        ae('老板在群里正式通知：刘不来长期未参与实验室工作，从下月起暂停发放研究生补助。', 'ed');
+        ae('刘不来秒回："好的老师。"', 'eb');
+        ae('下午，课题组Y老师把刘装装叫过去帮他重新做图。你听到她说："算了，我帮你重新处理一遍数据。"', 'ed');
+        G.lzremade = true;
+        am('16:30');
+        ae('门突然开了——刘不来走了进来。E师姐和你同时抬起头，迅速交换了一个眼神。', 'ed');
+        ae('她穿着拖鞋，拿了个U盘，全程没跟任何人说话。三分钟后走了。', 'en');
+        G.lbapp = (G.lbapp || 0) + 1;
+        sc([{ label: '😳 跟E师姐交换一个"天哪"的眼神', cls: 'bs', act: 'look' },{ label: '📱 在师门小群发"今日奇观"', cls: 'bs', act: 'msg' },{ label: '🤷 继续写致谢——最后一段了', cls: 'bp', act: 'finish' }]);
+      },
+      handle: function(a) {
+        if (a === 'look') { mp('mental', 2); ae('E师姐凑过来："你猜下次她什么时候来？盲审那天？答辩那天？"', 'ed'); }
+        else if (a === 'msg') { ae('群里F师兄回："我来这三年，这是第四次见到她。"G师兄回："我刚被指定带她。"', 'ed'); }
+        else { mp('paper', 3); ae('你写完致谢最后一个字。论文完成了。', 'eg'); }
+        goS(11);
+      }
+    },
+
+    11: { day: 24, wk: '周三', tag: '📌 提交前的最后准备', dr: '在反复核对论文', er: '在检查参考文献', fr: '在帮大家看格式', gr: '在查重', xy: '都在最后冲刺', lz: '论文几乎全是生信图，湿实验特别少', lb: '—— 据说她也提交了',
+      run: function() {
+        am('10:00');
+        ae('明天就是提交截止日。你在做最后的检查——每一张图、每一个引用、每一个标点。', 'en');
+        ae('X说他的查重率9%。Y说她的12%。Z的8%。你的查重率6%——几乎全是引文和固定术语。', 'eg');
+        ae('你路过刘装装的工位时瞥到——他的论文目录里，Results部分几乎全是生信预测。湿实验只有一个小节，图还特别少。', 'ed');
+        ae('据说刘不来也提交了论文。没人知道她什么时候写的。', 'ed');
+        mp('paper', 3);
+        sc([{ label: '✅ 提交论文', cls: 'bp', act: 'submit' }]);
+      },
+      handle: function() { mp('paper', 5); mp('mental', 5); ae('你点了提交。三十天的血和咖啡，汇成了一个PDF。', 'eg'); goS(12); }
+    },
+
+    12: { day: 26, wk: '周五', tag: '📌 暴风雨', dr: '面色凝重', er: '盯着屏幕一动不动', fr: '在走廊踱步', gr: '拿着手机发呆', xy: '大气不敢出', lz: '在工位上一动不动', lb: '在老板办公室里',
+      run: function() {
+        am('14:00');
+        ae('刘不来今天又来了。但这次不是来拿东西——老板直接把她叫进了办公室。门关得很紧。', 'ed');
+        ae('二十分钟后——', 'ed');
+        ae('"……你这论文里的数据是哪里来的？！这张图不是你做的！这张也不是！！你是要毁了这个实验室吗？！"', 'ed');
+        ae('老板的怒吼穿透了办公室的门。实验室里所有人都停下了手里的动作。', 'ed');
+        ae('D师姐双手撑在实验台上。E师姐的手指悬在键盘上方，没有落下。X、Y、Z面面相觑。', 'es');
+        ae('过了很久，门开了。刘不来走出来，面无表情。她经过E师姐工位时，两个人没有目光接触。', 'ed');
+        ae('后来D师姐告诉你：刘不来的论文里，有的图是以前师兄做的实验结果图，有的根本不知道来源。', 'ed');
+        G.lbexp = true;
+        sc([{ label: '😰 沉默地坐了很久', cls: 'bs', act: 'sit' },{ label: '跟D师姐出去走走', cls: 'bp', act: 'walk' },{ label: '✍️ 再次检查自己论文的所有数据来源', cls: 'bp', act: 'check' }]);
+      },
+      handle: function(a) {
+        if (a === 'walk') { mp('mental', 3); ae('D师姐在走廊里说："你知道最可悲的是什么吗？她可能根本不知道自己为什么错。"', 'es'); }
+        else if (a === 'check') { mp('mental', 4); ae('你仔细核对了一遍。你论文里的每一张图、每一个数据点，都是自己亲手做的。你松了一口气。', 'eg'); }
+        else { ae('你沉默地坐着。脑子里只有一个想法：还好我的论文是干净的。', 'en'); }
+        goS(13);
+      }
+    },
+
+    13: { day: 28, wk: '周日', tag: '📌 盲审结果', dr: '紧张地刷新邮箱', er: '也在刷新', fr: '也在刷新', gr: '也在刷新', xy: '集体刷新邮箱', lz: '在宿舍等结果', lb: '—— 结果到了她的邮箱',
+      run: function() {
+        am('10:00');
+        ae('你打开邮件。评审意见：两个"同意答辩"，一个"修改后答辩"——都是正面意见。你长长地呼了一口气。', 'eg');
+        mp('mental', 15);
+        ae('X、Y、Z也都顺利通过了。', 'eg');
+        am('消息传来');
+        ae('刘装装的盲审过了。评审意见说"生信分析较为系统"，虽然有人批注"湿实验验证不足"。但Y老师帮他重做的图起了决定性作用。', 'ed');
+        ae('刘不来的盲审也过了。评审意见里没有深究数据来源问题。', 'ed');
+        ae('E师姐放下手里的笔："所以……这样也能过？"', 'es');
+        ae('D师姐看了她一眼，没有回答。', 'es');
+        G.flags.blind = true;
+        sc([{ label: '🎉 和XYZ一起庆祝', cls: 'bp', act: 'party' },{ label: '💤 终于安心地睡了十二个小时', cls: 'bp', act: 'sleep' },{ label: '📝 认真修改盲审意见', cls: 'bs', act: 'revise' }]);
+      },
+      handle: function(a) {
+        if (a === 'party') { mp('mental', 5); mp('health', -1); ae('你们喝到很晚。Z举杯说："敬我们。敬真实的实验数据。"大家都笑了。', 'eg'); }
+        else if (a === 'sleep') { mp('health', 10); mp('mental', 8); ae('这是本学期睡得最好的一觉。', 'eg'); }
+        else { mp('paper', 3); ae('按评审意见认真修改完毕。', 'eg'); }
+        goS(14);
+      }
+    },
+
+    14: { day: 30, wk: '周一 · 答辩日', tag: '📌 答辩', dr: '来旁听，穿了正装', er: '来旁听，在帮你整理材料', fr: '来旁听', gr: '来旁听', xy: '紧张地等着', lz: '穿着不太合身的正装，一直在擦汗', lb: '出现了。答辩当天，她居然来了。',
+      run: function() {
+        am('8:00 — 答辩日');
+        ae('你的答辩很顺利。委员们对你的数据很满意，提了几个中肯的问题你都答上来了。', 'eg');
+
+        am('刘装装答辩');
+        ae('轮到刘装装。他依然播音腔，但答辩委员翻着他的论文皱起了眉头。', 'ed');
+        ae('委员A："你这个湿实验数据只有这么一点？WB只跑了一次？"', 'ed');
+        ae('刘装装正要开口，导师先接话了："他这个方向以生信分析为主，湿实验只是初步探索。后面会补的。"', 'ed');
+        ae('委员B看了一会数据图又说："这个误差棒……" 导师再次接话："生物体系本身变异就大。后续我们会增大样本量。"', 'ed');
+        ae('刘装装在一旁拼命点头。委员们交换了一个眼神，没有再追问。', 'ed');
+
+        am('刘不来答辩');
+        ae('刘不来站到了答辩席上。她的声音很小，但竟然把PPT讲完了。', 'ed');
+        ae('委员C翻到某一页："这张Co-IP图——是你自己做的吗？"', 'ed');
+        ae('刘不来还没开口，导师先说了："这张图是我们和另一个课题组合作做的。数据都是可靠的。"', 'ed');
+        ae('委员C看了导师一眼，没有追问下一张同样可疑的图。', 'ed');
+        ae('答辩结束，E师姐又跟你交换了一个眼神——这次的含意比以往任何一次都复杂。', 'ed');
+
+        am('结果');
+        ae('你——通过。X——通过。Y——通过。Z——通过。', 'eg');
+        ae('刘装装——通过。委员提了数据质量问题但导师全程护航。', 'ed');
+        ae('刘不来——通过。她的论文里有一些来源不明的数据，但无人深究。', 'ed');
+        G.done = true;
+        sc([{ label: '🎓 毕业了', cls: 'bp', act: 'end' }]);
+      },
+      handle: function() { showEnd(); }
+    }
+
+  };
+  return S[G.scene] || S[0];
+}
+
+function goS(n) {
+  G.scene = n; document.getElementById('ec2').innerHTML = ''; cc(); G._ch = [];
+  uh(); rs(); rc();
+  var s = getS();
+  if (s && s.run) { G.day = s.day; s.run(); uh(); }
+}
+
+window._pk = function(i) {
+  var ch = G._ch[i]; if (!ch) return;
+  cc(); ae('👉 ' + ch.label, 'ec');
+  var s = getS(); if (s && s.handle) s.handle(ch.act);
+};
+
+function showEnd() {
+  document.getElementById('game-screen').classList.remove('active');
+  document.getElementById('ending-screen').classList.add('active');
+  document.getElementById('endc').innerHTML =
+    '<div class="egood"><h1>🎓 毕业了</h1>' +
+    '<div class="etext"><p>这三十天里，你每天都在推进论文。每一张图都是亲手做的。</p><p>答辩委员评价你的数据"真实可信、图表规范"。D师姐跟你击掌的时候你差点哭了。</p></div>' +
+    '<div class="gb"><h2>毕业名单</h2><div class="glist">' +
+    '<div class="gi"><div class="gn">🙂 X</div><div class="gr">✅ 通过</div><div class="go">全勤 · 数据扎实</div></div>' +
+    '<div class="gi"><div class="gn">🙂 Y</div><div class="gr">✅ 通过</div><div class="go">全勤 · 数据扎实</div></div>' +
+    '<div class="gi"><div class="gn">🙂 Z</div><div class="gr">✅ 通过</div><div class="go">全勤 · 数据扎实</div></div>' +
+    '<div class="gi"><div class="gn" style="color:#d29922;">🤖 刘装装</div><div class="gr">⚠️ 通过</div><div class="go">出勤约半 · 生信图多湿实验极少</div></div>' +
+    '<div class="gi"><div class="gn" style="color:#f85149;">🛌 刘不来</div><div class="gr">😶 通过</div><div class="go">出勤3天 · 数据来源存疑</div></div>' +
+    '<div class="gi" style="border-color:#3fb950;"><div class="gn" style="color:#3fb950;">🎓 你</div><div class="gr">✅ 通过</div><div class="go">论文100 · 数据真实</div></div>' +
+    '</div></div>' +
+    '<div style="background:#161b22;border-radius:10px;padding:18px;max-width:420px;margin:14px auto;text-align:left;font-size:0.85em;">' +
+    '<h3 style="color:#58a6ff;margin-bottom:10px;">📊 毕业数据</h3>' +
+    '<div class="srow"><span class="slabel">你</span><span>论文💯 · 身体😷50 · 精神😫50 · 每张图都是真的</span></div>' +
+    '<div class="srow"><span class="slabel">X/Y/Z</span><span>论文扎实 · 全勤 · 数据真实</span></div>' +
+    '<div class="srow"><span class="slabel" style="color:#d29922;">刘装装</span><span style="color:#d29922;">论文75 · 身体😊100 · 精神😊100 · 导师答辩全程找补</span></div>' +
+    '<div class="srow"><span class="slabel" style="color:#f85149;">刘不来</span><span style="color:#f85149;">论文75 · 身体😊100 · 精神😊100 · 数据存疑 · 导师答辩全程找补</span></div>' +
+    '</div>' +
+    '<button class="btn bp" onclick="window.restartGame()" style="margin-top:14px;">🔄 再来一次</button></div>';
+}
+
+window.startGame = function() {
+  document.getElementById('title-screen').classList.remove('active');
+  document.getElementById('ending-screen').classList.remove('active');
+  document.getElementById('game-screen').classList.add('active');
+  G.day = 1; G.scene = 0; G.done = false;
+  G.player = { paper: 35, health: 65, mental: 60 };
+  G.flags = {}; G.lbchain = 0; G.lbapp = 0; G._ch = [];
+  document.getElementById('ec2').innerHTML = '';
+  cc(); rs(); rc(); uh();
+  goS(0);
+};
+
+window.restartGame = function() {
+  document.getElementById('ending-screen').classList.remove('active');
+  window.startGame();
+};
+
+})();
+</script>
+</body>
+</html>
